@@ -15,14 +15,15 @@
       </add>
     </operation>
   </file>
-  <file path="system/library/db/mpdo.php">
+  <file path="system/library/db.php">
     <operation>
-      <search index="1" trim="true"><![CDATA[$this->statement = $this->connection->prepare($sql);]]></search>
-      <add position="replace"  trim="false">
-        <![CDATA[if (isset($_GET['debug'])) {
+      <search><![CDATA[$query = $this->adaptor->query($sql);]]></search>
+      <add position="replace">
+        <![CDATA[
+       if (isset($_GET['debug'])) {
     			global $debugModelQueries;
     			$startTime = microtime(true);
-    			$this->statement = $this->connection->prepare($sql);;
+    			$query = $this->adaptor->query($sql);
     			$executeTimeQuery = microtime(true) - $startTime;
     			$debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
     			$debugModelQueries[] = [
@@ -30,12 +31,13 @@
     				'method' => (!empty($debugBacktrace[2]['function'])) ? $debugBacktrace[2]['function'] : '',
     				'query' => $sql,
     				'time'  => $executeTimeQuery,
-    				'file' => (!empty($debugBacktrace[2]['file'])) ? $debugBacktrace[2]['file'] : $debugBacktrace[1]['file'],
-    				'class:method' => (!empty($debugBacktrace[2]['class'])) ? $debugBacktrace[2]['class'] . '->' . $debugBacktrace[2]['function'] : '',
+    				'file' => (!empty($debugBacktrace[0]['file'])) ? $debugBacktrace[0]['file'] : $debugBacktrace[1]['file'],
+    				'class:method' => (!empty($debugBacktrace[1]['class'])) ? $debugBacktrace[1]['class'] . '->' . $debugBacktrace[1]['function'] : '',
     			];
     		} else {
-    			$this->statement = $this->connection->prepare($sql);
-    		}]]>
+    			$query = $this->adaptor->query($sql);
+    		}
+]]>
       </add>
     </operation>
 	</file>
