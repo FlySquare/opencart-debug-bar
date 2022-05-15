@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modification>
+  <name>Opencart Debug Bar <t style="color:red">(by Umut Can Arda)</t></name>
+  <version>1.0.0</version>
+  <link>https://github.com/FlySquare/opencart-debug-bar</link>
+  <author><a href="mailto:umutkonurinso@gmail.com">Umut Can Arda</a></author>
+  <code>opencart_debug_bar</code>
+  <description>Debug Bar for Opencart</description>
+  <file path="catalog/controller/common/header.php">
+    <operation>
+      <search trim="true"><![CDATA[public function index() {]]></search>
+      <add position="after">
+        <![CDATA[
+        require_once('catalog/controller/extension/module/opencart_debug_bar.php');]]>
+      </add>
+    </operation>
+  </file>
+  <file path="system/library/db/mpdo.php">
+    <operation>
+      <search index="1" trim="true"><![CDATA[$this->statement = $this->connection->prepare($sql);]]></search>
+      <add position="replace"  trim="false">
+        <![CDATA[if (isset($_GET['debug'])) {
+    			global $debugModelQueries;
+    			$startTime = microtime(true);
+    			$this->statement = $this->connection->prepare($sql);;
+    			$executeTimeQuery = microtime(true) - $startTime;
+    			$debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+    			$debugModelQueries[] = [
+    				'class' => (!empty($debugBacktrace[2]['class'])) ? $debugBacktrace[2]['class'] : '',
+    				'method' => (!empty($debugBacktrace[2]['function'])) ? $debugBacktrace[2]['function'] : '',
+    				'query' => $sql,
+    				'time'  => $executeTimeQuery,
+    				'file' => (!empty($debugBacktrace[2]['file'])) ? $debugBacktrace[2]['file'] : $debugBacktrace[1]['file'],
+    				'class:method' => (!empty($debugBacktrace[2]['class'])) ? $debugBacktrace[2]['class'] . '->' . $debugBacktrace[2]['function'] : '',
+    			];
+    		} else {
+    			$this->statement = $this->connection->prepare($sql);
+    		}]]>
+      </add>
+    </operation>
+	</file>
+  <file path="system/engine/action.php">
+	<operation>
+      <search trim="true">
+        <![CDATA[return call_user_func_array(array($controller, $this->method), $args);]]>
+      </search>
+      <add position="replace" trim="false">
+        <![CDATA[if (isset($_GET['debug'])) {
+  					global $debugControllerActions;
+  					$time = microtime(true);
+  					$call_func = call_user_func_array(array($controller, $this->method), $args);
+  					$debugControllerActions[] = [
+  						'class' => get_class($controller),
+  						'method' => $this->method,
+  						'time' => microtime(true) - $time,
+  					];
+  					return $call_func;
+  				} else {
+  					return call_user_func_array(array($controller, $this->method), $args);
+  				}]]>
+      </add>
+    </operation>
+  </file>
+  </modification>
